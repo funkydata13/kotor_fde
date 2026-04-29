@@ -3,170 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparatif ReShade - KotOR</title>
+    <title>Comparatifs ReShade - KotOR</title>
     <style>
-        :root {
-            --accent-color: #00d4ff;
-        }
+        :root { --accent: #00d4ff; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #050505; color: white; font-family: sans-serif; overflow: hidden; }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #050505;
-            color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; /* Empêche le scroll sur la page */
-        }
-
-        /* Conteneur principal qui prend tout l'écran */
-        .comparison-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+        .comp-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
 
         /* Calques d'images */
-        .image-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: contain; /* 'contain' pour voir toute l'image, 'cover' pour remplir l'écran */
-            background-position: center;
-            background-repeat: no-repeat;
-            pointer-events: none;
-        }
+        .img-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: contain; background-position: center; background-repeat: no-repeat; pointer-events: none; transition: background-image 0.3s ease-in-out; }
+        .before-layer { z-index: 2; clip-path: inset(0 50% 0 0); }
+        .after-layer { z-index: 1; }
 
-        /* Image du dessous (ReShade) */
-        .after-layer {
-            z-index: 1;
-        }
+        /* Slider & Ligne */
+        .slider-line { position: absolute; top: 0; bottom: 0; width: 2px; background: white; left: 50%; z-index: 4; pointer-events: none; }
+        .slider-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; cursor: ew-resize; background: transparent; -webkit-appearance: none; appearance: none; margin: 0; outline: none; }
 
-        /* Image du dessus (Original) - Découpée par le script */
-        .before-layer {
-            z-index: 2;
-            clip-path: inset(0 50% 0 0);
-        }
+        /* Interface (Labels et Nav) */
+        .label { position: absolute; top: 20px; z-index: 6; background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 4px; font-size: 14px; font-weight: bold; pointer-events: none; border: 1px solid rgba(255,255,255,0.1); }
+        .label-before { left: 20px; border-left: 4px solid var(--accent); }
+        .label-after { right: 20px; border-right: 4px solid var(--accent); }
 
-        /* La ligne de séparation visuelle */
-        .slider-line {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: white;
-            left: 50%;
-            z-index: 4;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            pointer-events: none;
-        }
+        .scene-title { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 6; background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 20px; font-size: 16px; border: 1px solid var(--accent); }
 
-        /* Le contrôle invisible pour l'interaction */
-        .slider-input {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
-            cursor: ew-resize;
-            background: transparent;
-            -webkit-appearance: none;
-            appearance: none;
-            margin: 0;
-            outline: none;
-        }
+        /* Navigation */
+        .nav-controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; align-items: center; gap: 20px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2); }
+        .nav-btn { background: none; border: 1px solid white; color: white; padding: 5px 15px; cursor: pointer; border-radius: 20px; transition: 0.2s; font-weight: bold; }
+        .nav-btn:hover { background: white; color: black; }
+        .counter { font-family: monospace; font-size: 14px; min-width: 50px; text-align: center; }
 
-        /* Labels stylisés */
-        .label {
-            position: absolute;
-            top: 20px;
-            z-index: 6;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 1px solid rgba(255,255,255,0.2);
-            pointer-events: none;
-        }
-        .label-before { left: 20px; border-left: 4px solid var(--accent-color); }
-        .label-after { right: 20px; border-right: 4px solid var(--accent-color); }
-
-        /* Bouton Plein Écran (natif) */
-        .fs-button {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            border: 1px solid white;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-        .fs-button:hover {
-            background: white;
-            color: black;
-        }
+        .fs-toggle { position: absolute; bottom: 20px; right: 20px; z-index: 10; background: rgba(0,0,0,0.8); border: 1px solid white; color: white; padding: 10px; cursor: pointer; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<div class="comparison-container" id="app">
-    <!-- Labels -->
+<div class="comp-container" id="app">
     <div class="label label-before">Original</div>
+    <div id="title" class="scene-title">Chargement...</div>
     <div class="label label-after">ReShade ON</div>
 
-    <!-- Image Fond (Après) -->
-    <div class="image-layer after-layer" style="background-image: url('https://i.ibb.co/fd5FY2zN/kotor-206-b.png');"></div>
-
-    <!-- Image Dessus (Avant) -->
-    <div id="before" class="image-layer before-layer" style="background-image: url('https://i.ibb.co/ymT1VyBH/kotor-206-a.png');"></div>
-
-    <!-- Séparateur visuel -->
+    <div id="after" class="img-layer after-layer"></div>
+    <div id="before" class="img-layer before-layer"></div>
     <div id="line" class="slider-line"></div>
 
-    <!-- Input de contrôle -->
     <input type="range" min="0" max="100" value="50" class="slider-input" id="slider">
 
-    <button class="fs-button" onclick="toggleFS()">⛶ PLEIN ÉCRAN</button>
+    <div class="nav-controls">
+        <button class="nav-btn" onclick="prev()">Précédent</button>
+        <span class="counter" id="counter">1 / 1</span>
+        <button class="nav-btn" onclick="next()">Suivant</button>
+    </div>
+
+    <button class="fs-toggle" onclick="toggleFS()">⛶</button>
 </div>
 
 <script>
+    // --- CONFIGURATION DES IMAGES ---
+    const scenes = [
+        {
+            title: "Taris - Base Sith 1",
+            original: "https://i.ibb.co/ymT1VyBH/kotor-206-a.png",
+            reshade: "https://i.ibb.co/fd5FY2zN/kotor-206-b.png"
+        },
+        {
+            title: "Taris - Base Sith 2",
+            original: "https://i.ibb.co/yFDD5458/taris-basesith-01-a.png",
+            reshade: "https://i.ibb.co/0pP2WXbV/taris-basesith-01-b.png"
+        },
+        {
+            title: "Taris - Base Sith 3",
+            original: "https://i.ibb.co/V0h1CWfD/taris-basesith-02-a.png",
+            reshade: "https://i.ibb.co/jZfcNstG/taris-basesith-02-b.png"
+        },
+        {
+            title: "Taris - Base Sith 4",
+            original: "https://i.ibb.co/606nMmLH/taris-basesith-03-a.png",
+            reshade: "https://i.ibb.co/MymHQKnZ/taris-basesith-03-b.png"
+        },
+        {
+            title: "Taris - Appartements",
+            original: "https://i.ibb.co/Zp4txMLW/taris-appart-01-a.png",
+            reshade: "https://i.ibb.co/vxqyXyB2/taris-appart-01-b.png"
+        },
+        {
+            title: "Taris - Cantina",
+            original: "https://i.ibb.co/BV2WNrNc/taris-cantina-01-a.png",
+            reshade: "https://i.ibb.co/VchTjNpR/taris-cantina-01-b.png"
+        },
+        {
+            title: "Taris - Arene",
+            original: "https://i.ibb.co/B2dWq4mx/taris-arene-01-a.png",
+            reshade: "https://i.ibb.co/JFHz1n1t/taris-arene-01-b.png"
+        },
+        {
+            title: "Taris - Égouts",
+            original: "https://i.ibb.co/tp5wHnbP/swkotor-2026-04-28-22-31-18-467-Before.png",
+            reshade: "https://i.ibb.co/bgTZGFsG/swkotor-2026-04-28-22-31-18-467-After.png"
+        },
+        {
+            title: "Taris - Ville Haute",
+            original: "https://i.ibb.co/gZKSKJKZ/swkotor-2026-04-29-00-21-03-804-Before.png",
+            reshade: "https://i.ibb.co/N2YchP4r/swkotor-2026-04-29-00-21-03-804-After.png"
+        }
+        // Ajoutez vos autres couples ici
+    ];
+
+    let currentIndex = 0;
+
     const slider = document.getElementById('slider');
     const before = document.getElementById('before');
+    const after = document.getElementById('after');
     const line = document.getElementById('line');
-    const app = document.getElementById('app');
+    const title = document.getElementById('title');
+    const counter = document.getElementById('counter');
 
-    // Mise à jour de la position
+    // Initialisation au chargement
+    function init() {
+        // Lire l'ID dans l'URL (?id=0)
+        const params = new URLSearchParams(window.location.search);
+        const id = parseInt(params.get('id'));
+        if (!isNaN(id) && id >= 0 && id < scenes.length) {
+            currentIndex = id;
+        }
+        updateDisplay();
+    }
+
+    function updateDisplay() {
+        const scene = scenes[currentIndex];
+        before.style.backgroundImage = `url('${scene.original}')`;
+        after.style.backgroundImage = `url('${scene.reshade}')`;
+        title.innerText = scene.title;
+        counter.innerText = `${currentIndex + 1} / ${scenes.length}`;
+        
+        // Mettre à jour l'URL sans recharger la page
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?id=${currentIndex}`;
+        window.history.pushState({path:newUrl},'',newUrl);
+    }
+
+    function next() {
+        currentIndex = (currentIndex + 1) % scenes.length;
+        updateDisplay();
+    }
+
+    function prev() {
+        currentIndex = (currentIndex - 1 + scenes.length) % scenes.length;
+        updateDisplay();
+    }
+
     slider.addEventListener('input', (e) => {
-        const value = e.target.value;
-        before.style.clipPath = `inset(0 ${100 - value}% 0 0)`;
-        line.style.left = value + '%';
+        const v = e.target.value;
+        before.style.clipPath = `inset(0 ${100 - v}% 0 0)`;
+        line.style.left = v + '%';
     });
 
-    // Gestion du plein écran réel
     function toggleFS() {
-        if (!document.fullscreenElement) {
-            app.requestFullscreen().catch(err => {
-                alert(`Erreur : ${err.message}`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
+        if (!document.fullscreenElement) document.getElementById('app').requestFullscreen();
+        else document.exitFullscreen();
     }
+
+    init();
 </script>
 
 </body>
