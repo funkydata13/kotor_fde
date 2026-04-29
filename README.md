@@ -1,6 +1,7 @@
 KOTOR FUNKYDATA EDITION
 
 - Comparateur de Screenshots JS
+  - https://funkydata13.github.io/kotor_fde/comparateur.html?id=0
 
 - DelDuplicateTGA-TPC.bat
   - Script terminal qui supprime au choix les TPC ou les TGA/TXI s'il trouve la même texture dans les deux formats dans le dossier "override"
