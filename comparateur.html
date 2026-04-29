@@ -158,12 +158,29 @@
 
     function updateDisplay() {
         const scene = scenes[currentIndex];
+        
+        // 1. On charge les images de la scène actuelle d'abord
         before.style.backgroundImage = `url('${scene.original}')`;
         after.style.backgroundImage = `url('${scene.reshade}')`;
+        
         title.innerText = scene.title;
         counter.innerText = `${currentIndex + 1} / ${scenes.length}`;
-        
-        // Mettre à jour l'URL sans recharger la page
+    
+        // 2. On attend 1.5 seconde (une fois que l'actuelle est normalement affichée)
+        // pour précharger la SUIVANTE en toute discrétion.
+        setTimeout(() => {
+            const nextIndex = (currentIndex + 1) % scenes.length;
+            const nextScene = scenes[nextIndex];
+            
+            const imgPreload1 = new Image();
+            const imgPreload2 = new Image();
+            imgPreload1.src = nextScene.original;
+            imgPreload2.src = nextScene.reshade;
+            
+            console.log("Préchargement de la scène suivante : " + nextScene.title);
+        }, 1500);
+    
+        // Mise à jour URL
         const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + `?id=${currentIndex}`;
         window.history.pushState({path:newUrl},'',newUrl);
     }
