@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparatif ReShade - KotOR</title>
+    <style>
+        :root {
+            --accent-color: #00d4ff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #050505;
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden; /* Empêche le scroll sur la page */
+        }
+
+        /* Conteneur principal qui prend tout l'écran */
+        .comparison-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Calques d'images */
+        .image-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: contain; /* 'contain' pour voir toute l'image, 'cover' pour remplir l'écran */
+            background-position: center;
+            background-repeat: no-repeat;
+            pointer-events: none;
+        }
+
+        /* Image du dessous (ReShade) */
+        .after-layer {
+            z-index: 1;
+        }
+
+        /* Image du dessus (Original) - Découpée par le script */
+        .before-layer {
+            z-index: 2;
+            clip-path: inset(0 50% 0 0);
+        }
+
+        /* La ligne de séparation visuelle */
+        .slider-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: white;
+            left: 50%;
+            z-index: 4;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+
+        /* Le contrôle invisible pour l'interaction */
+        .slider-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            cursor: ew-resize;
+            background: transparent;
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 0;
+            outline: none;
+        }
+
+        /* Labels stylisés */
+        .label {
+            position: absolute;
+            top: 20px;
+            z-index: 6;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none;
+        }
+        .label-before { left: 20px; border-left: 4px solid var(--accent-color); }
+        .label-after { right: 20px; border-right: 4px solid var(--accent-color); }
+
+        /* Bouton Plein Écran (natif) */
+        .fs-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 1px solid white;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .fs-button:hover {
+            background: white;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+<div class="comparison-container" id="app">
+    <!-- Labels -->
+    <div class="label label-before">Original</div>
+    <div class="label label-after">ReShade ON</div>
+
+    <!-- Image Fond (Après) -->
+    <div class="image-layer after-layer" style="background-image: url('https://i.ibb.co/XxSPGHsD/kotor-206-b.png');"></div>
+
+    <!-- Image Dessus (Avant) -->
+    <div id="before" class="image-layer before-layer" style="background-image: url('https://i.ibb.co/gb8zNjyj/kotor-206-a.png');"></div>
+
+    <!-- Séparateur visuel -->
+    <div id="line" class="slider-line"></div>
+
+    <!-- Input de contrôle -->
+    <input type="range" min="0" max="100" value="50" class="slider-input" id="slider">
+
+    <button class="fs-button" onclick="toggleFS()">⛶ PLEIN ÉCRAN</button>
+</div>
+
+<script>
+    const slider = document.getElementById('slider');
+    const before = document.getElementById('before');
+    const line = document.getElementById('line');
+    const app = document.getElementById('app');
+
+    // Mise à jour de la position
+    slider.addEventListener('input', (e) => {
+        const value = e.target.value;
+        before.style.clipPath = `inset(0 ${100 - value}% 0 0)`;
+        line.style.left = value + '%';
+    });
+
+    // Gestion du plein écran réel
+    function toggleFS() {
+        if (!document.fullscreenElement) {
+            app.requestFullscreen().catch(err => {
+                alert(`Erreur : ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+</script>
+
+</body>
+</html>
